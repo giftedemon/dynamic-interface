@@ -90,3 +90,96 @@ const changeToNextSlide = () => {
 buildSlider();
 changeSlideColors();
 infiniteTimeout();
+
+const form = document.querySelector("form");
+
+const inputRequirements = {
+    email: {
+        minLength: 5,
+        errors: ["typeMismatch"],
+    },
+    country: {
+        minLength: 5,
+    },
+    password: {
+        minLength: 5,
+    },
+    "password-confirmation": {
+        minLength: 5,
+    },
+    "zip-code": {
+        minLength: 3,
+    },
+};
+
+const errorTexts = {
+    typeMismatch: "Incorrect format",
+};
+
+form.addEventListener("input", (e) => {
+    const formInput = e.target;
+    const formInputValue = e.target.value;
+    const formError = e.target.parentNode.querySelector(".error");
+
+    if (hasWhitespace(formInputValue)) {
+        showError({ formError, errorText: "Has a whitespace!", formInput });
+        return;
+    }
+
+    if (formInputValue.length === 0) {
+        hideError({ formError });
+        formInput.style.border = `1.5px solid black`;
+        return;
+    } else if (isShort(formInput)) {
+        showError({ formError, errorText: "Too short", formInput });
+        return;
+    }
+
+    if (!formInput.validity.valid) {
+        checkValidity(formInput, formError);
+        return;
+    }
+
+    if (formInput.getAttribute("name") === "password-confirmation") {
+        if (formInputValue !== form.querySelector("input[name=password]").value) {
+            showError({ formError, errorText: "Password do not match", formInput });
+            return;
+        }
+    }
+
+    hideError({ formError });
+    formInput.style.border = "1.5px solid green";
+});
+
+form.querySelector("button").addEventListener("click", (event) => {
+    event.preventDefault();
+});
+
+const hasWhitespace = (value) => {
+    return value.indexOf(" ") >= 0;
+};
+
+const isShort = (formInput) => {
+    const formInputLength = formInput.value.length;
+    return formInputLength < inputRequirements[formInput.getAttribute("name")].minLength;
+};
+
+const showError = ({ formError, errorText, formInput }) => {
+    formError.classList.remove("hidden");
+    formError.textContent = errorText;
+    formInput.style.border = "1.5px solid red";
+};
+
+const checkValidity = (formInput, formError) => {
+    try {
+        inputRequirements[formInput.getAttribute("name")].errors.map((error) => {
+            if (formInput.validity[error]) {
+                showError({ formError, errorText: errorTexts[error], formInput });
+            }
+        });
+    } catch {}
+};
+
+const hideError = ({ formError }) => {
+    formError.classList.add("hidden");
+};
